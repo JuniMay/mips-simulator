@@ -123,8 +123,8 @@ void process_instruction()
                     NEXT_STATE.PC = CURRENT_STATE.REGS[rs];
                 }
                 case 0xc: {
-                    uint32_t code = (rs << 16) | (rt << 11) | (rd << 5) | shamt;
-                    if (code == 0x1a) {
+                    // SYSCALL
+                    if (CURRENT_STATE.REGS[2] == 0x0a) {
                         RUN_BIT = FALSE;
                     }
                 }
