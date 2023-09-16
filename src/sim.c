@@ -65,19 +65,19 @@ void process_instruction() {
             switch (funct) {
                 case 0x0: {
                     // SLL
-                    NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] << shamt;
+                    NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rt] << shamt;
                     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
                     break;
                 }
                 case 0x2: {
                     // SRL
-                    NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] >> shamt;
+                    NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rt] >> shamt;
                     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
                     break;
                 }
                 case 0x3: {
                     // SRA
-                    int32_t val = *((int32_t*)&CURRENT_STATE.REGS[rs]);
+                    int32_t val = *((int32_t*)&CURRENT_STATE.REGS[rt]);
                     val = val >> shamt;
                     NEXT_STATE.REGS[rd] = val;
                     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
@@ -113,7 +113,7 @@ void process_instruction() {
                 }
                 case 0x9: {
                     // JALR
-                    NEXT_STATE.REGS[rd] = CURRENT_STATE.PC + 8;
+                    NEXT_STATE.REGS[rd] = CURRENT_STATE.PC + 4;
                     NEXT_STATE.PC = CURRENT_STATE.REGS[rs];
                     break;
                 }
@@ -121,6 +121,8 @@ void process_instruction() {
                     // SYSCALL
                     if (CURRENT_STATE.REGS[2] == 0x0a) {
                         RUN_BIT = FALSE;
+                    } else {
+                        NEXT_STATE.PC = CURRENT_STATE.PC + 4;
                     }
                     break;
                 }
@@ -303,7 +305,7 @@ void process_instruction() {
             uint32_t offset = sign_ext(imm) << 2;
 
             if (CURRENT_STATE.REGS[rs] == CURRENT_STATE.REGS[rt]) {
-                NEXT_STATE.PC = CURRENT_STATE.PC + offset;
+                NEXT_STATE.PC = CURRENT_STATE.PC + offset + 4;
             } else {
                 NEXT_STATE.PC = CURRENT_STATE.PC + 4;
             }
@@ -316,7 +318,7 @@ void process_instruction() {
                 case 0x0: {
                     // BLTZ
                     if ((CURRENT_STATE.REGS[rs] & 0x80000000) != 0) {
-                        NEXT_STATE.PC = CURRENT_STATE.PC + offset;
+                        NEXT_STATE.PC = CURRENT_STATE.PC + offset + 4;
                     } else {
                         NEXT_STATE.PC = CURRENT_STATE.PC + 4;
                     }
@@ -324,9 +326,9 @@ void process_instruction() {
                 }
                 case 0x10: {
                     // BLTZAL
-                    NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 8;
+                    NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 4;
                     if ((CURRENT_STATE.REGS[rs] & 0x80000000) != 0) {
-                        NEXT_STATE.PC = CURRENT_STATE.PC + offset;
+                        NEXT_STATE.PC = CURRENT_STATE.PC + offset + 4;
                     } else {
                         NEXT_STATE.PC = CURRENT_STATE.PC + 4;
                     }
@@ -335,7 +337,7 @@ void process_instruction() {
                 case 0x1: {
                     // BGEZ
                     if ((CURRENT_STATE.REGS[rs] & 0x80000000) == 0) {
-                        NEXT_STATE.PC = CURRENT_STATE.PC + offset;
+                        NEXT_STATE.PC = CURRENT_STATE.PC + offset + 4;
                     } else {
                         NEXT_STATE.PC = CURRENT_STATE.PC + 4;
                     }
@@ -343,9 +345,9 @@ void process_instruction() {
                 }
                 case 0x11: {
                     // BGEZAL
-                    NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 8;
+                    NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 4;
                     if ((CURRENT_STATE.REGS[rs] & 0x80000000) == 0) {
-                        NEXT_STATE.PC = CURRENT_STATE.PC + offset;
+                        NEXT_STATE.PC = CURRENT_STATE.PC + offset + 4;
                     } else {
                         NEXT_STATE.PC = CURRENT_STATE.PC + 4;
                     }
@@ -359,8 +361,13 @@ void process_instruction() {
 
             uint32_t offset = sign_ext(imm) << 2;
 
+            printf("BNE: offset: %d, rs: %d, rt: %d\n", offset, rs, rt);
+
+            printf("rs: 0x%08x\n", CURRENT_STATE.REGS[rs]);
+            printf("rt: 0x%08x\n", CURRENT_STATE.REGS[rt]);
+
             if (CURRENT_STATE.REGS[rs] != CURRENT_STATE.REGS[rt]) {
-                NEXT_STATE.PC = CURRENT_STATE.PC + offset;
+                NEXT_STATE.PC = CURRENT_STATE.PC + offset + 4;
             } else {
                 NEXT_STATE.PC = CURRENT_STATE.PC + 4;
             }
@@ -374,12 +381,34 @@ void process_instruction() {
             if (rt == 0) {
                 if ((CURRENT_STATE.REGS[rs] & 0x80000000) != 0 ||
                     CURRENT_STATE.REGS[rs] == 0) {
-                    NEXT_STATE.PC = CURRENT_STATE.PC + offset;
+                    NEXT_STATE.PC = CURRENT_STATE.PC + offset + 4;
                 } else {
                     NEXT_STATE.PC = CURRENT_STATE.PC + 4;
                 }
             } else {
                 // Illegal instruction
+                printf("Illegal rt in BLEZ.\n");
+            }
+            break;
+        }
+        case 0x7: {
+            // BGTZ
+            uint32_t offset = sign_ext(imm) << 2;
+
+            printf("BGTZ: offset: 0x%08x, rs: %d, rt: %d, pc: 0x%08x\n", offset,
+                   rs, rt, CURRENT_STATE.PC);
+
+            if (rt == 0) {
+                if ((CURRENT_STATE.REGS[rs] & 0x80000000) == 0 &&
+                    CURRENT_STATE.REGS[rs] != 0) {
+                    NEXT_STATE.PC = CURRENT_STATE.PC + offset + (uint32_t)4;
+                    printf("PC: 0x%08x\n", NEXT_STATE.PC);
+                } else {
+                    NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+                }
+            } else {
+                // Illegal instruction
+                printf("Illegal rt in BGTZ.\n");
             }
             break;
         }
@@ -392,7 +421,7 @@ void process_instruction() {
         case 0x3: {
             // JAL
             uint32_t target = extract_target(inst);
-            NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 8;
+            NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 4;
             NEXT_STATE.PC = (CURRENT_STATE.PC & 0xf0000000) | (target << 2);
             break;
         }
