@@ -463,9 +463,9 @@ void process_instruction() {
 
             uint32_t addr = sign_ext(imm) + CURRENT_STATE.REGS[rs];
 
-            uint8_t byte = mem_read_32(addr) & 0xffff;
+            uint16_t half = mem_read_32(addr) & 0xffff;
 
-            NEXT_STATE.REGS[rt] = sign_ext_half(byte);
+            NEXT_STATE.REGS[rt] = sign_ext_half(half);
             NEXT_STATE.PC = CURRENT_STATE.PC + 4;
             break;
         }
@@ -474,9 +474,9 @@ void process_instruction() {
 
             uint32_t addr = sign_ext(imm) + CURRENT_STATE.REGS[rs];
 
-            uint8_t byte = mem_read_32(addr) & 0xffff;
+            uint16_t half = mem_read_32(addr) & 0xffff;
 
-            NEXT_STATE.REGS[rt] = zero_ext_half(byte);
+            NEXT_STATE.REGS[rt] = zero_ext_half(half);
             NEXT_STATE.PC = CURRENT_STATE.PC + 4;
             break;
         }
@@ -508,7 +508,6 @@ void process_instruction() {
 
             uint32_t val = (mem_read_32(addr) & 0xffff0000) |
                            (CURRENT_STATE.REGS[rt] & 0xffff);
-
             mem_write_32(addr, val);
             NEXT_STATE.PC = CURRENT_STATE.PC + 4;
             break;
