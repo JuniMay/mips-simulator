@@ -15,7 +15,8 @@ l_3:
 	addiu $7, $zero, 0x1337
         # Should not reach here
 l_4:
-        addiu $7, $zero, 0xd00d
+        # addiu $7, $zero, 0xd00d
+        ori $7, $zero, 0xd00d
         syscall
         
          

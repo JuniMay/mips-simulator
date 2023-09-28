@@ -4,10 +4,15 @@ main:
         #;;  Set a base address
         lui    $3, 0x1000
 
-        addiu  $5, $zero, 0xcafe
-        addiu  $6, $zero, 0xfeca
-        addiu  $7, $zero, 0xbeef
-        addiu  $8, $zero, 0xefbe
+        # addiu  $5, $zero, 0xcafe
+        # addiu  $6, $zero, 0xfeca
+        # addiu  $7, $zero, 0xbeef
+        # addiu  $8, $zero, 0xefbe
+
+        ori  $5, $zero, 0xcafe
+        ori  $6, $zero, 0xfeca
+        ori  $7, $zero, 0xbeef
+        ori  $8, $zero, 0xefbe
                 
         #;; Place a test pattern in memory
         sb     $5, 0($3)
