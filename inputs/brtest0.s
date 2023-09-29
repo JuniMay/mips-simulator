@@ -1,5 +1,6 @@
         # Basic branch test
 	.text
+
 main:
         addiu $v0, $zero, 0xa
 l_0:    
@@ -27,8 +28,7 @@ l_3:
         addiu $8, $zero, 0x347
         syscall
 l_4:
-        # addiu $7, $zero, 0xd00d
-        ori $7, $zero, 0xd00d
+        addiu $7, $zero, 0xd00d
         syscall
         
          
